@@ -1,0 +1,268 @@
+## R 유용한 함수
+
+#1) 특정 행과 열에 결측값이 들어있는 행을 데이터 셋에서 제거 : complete.cases()
+
+Cars93_2 <- Cars93[ complete.cases(Cars93[ , c("Rear.seat.room")]), ] 
+
+** distinct() - 중복한 값 제거 후 도
+
+#2) 결측값을 다른 값으로 대체: dataset$var[is.na(dataset$var)] <- new_value
+
+Cars93_4$Luggage.room[is.na(Cars93_4$Luggage.room)] <- 0
+
+
+#3) 데이터프레임의 각 변수의 결측값을 각 변수 별 평균값으로 일괄 대체 
+
+: sapply(dataset, function(x) ifelse(is.na(x), mean(x, na.rm=TRUE), x)) 
+
+data.frame(sapply(Cars93_7,function(x) ifelse(is.na(x), mean(x, na.rm = TRUE), x)))
+
+#4) rep() : 일정한 데이터 반복
+
+rep() exmaple
+> x <- c(1:20)
+> y <- rep(1, times = 20)
+> z <- rep(c(1, 2), c(10, 10))
+> xyz <- data.frame(cbind(x, y, z))
+> xyz
+
+xyz$seq_no_1 <- rep(c(1:5), len = nrow(xyz)) 
+
+# apply -> 메트릭스나 벡터로 출
+#5 tapply(벡터,요인,함수) --> 결과물 : 벡터 or 행렬
+* factor의 수준별로 벡터에 항상 명령어를 동시에 적용
+
+tapply(MPG.highway, Type, mean)
+
+#6 sapply(데이터 프레임, 함수) --> 결과물: 벡터 or 행렬
+sapply(Cars93, class)
+#7 lapply(데이터 프레임, 함수) --> 결과물: 리스트
+lapply(Cars93, class)
+
+#7 colSums,rowSums, colMeans(),rowMeans()
+
+#8 transform(dataframe, new_variable = 수식)
+변수 생성
+
+#9 indexing & which() 함수를 활용한 특정 조건을 만족하는 변수 선택
+mtcars[ which( am == 0 & cyl == c(4, 6)), c("mpg", "cyl", "am")]
+
+#10 subset(dataset이름, select = c(변수명), subset = (선별 조건)) 를 활용한 변수 선택
+
+subset( mtcars, select = c( mpg, cyl, am ), subset = (am == 1 & cyl == c(4, 6))
+
+#11 표준화 - 1) z 변환 - (a) scale()함수
+transform(height, z.height_korean = scale(height_korean), z.height_bushman = scale(height_bushman))
+
+#12 표준화 -2) [0-1] 변환 -  (x-min(x) /(max(x)-min(x))
+transform(height, h_kor_01 = (h_kor - min(h_kor))/(max(h_kor) - min(h_kor))
+                , h_bush_01 = (h_bush - min(h_bush))/(max(h_bush) - min(h_bush)))
+
+#13 정규분포 - 1)로그변환 log()
+* 정규분포의 형태가 아닌 한쪽으로 쏠려 있는 멱함수 형태의 분포를 정규분포로 변환한다.
+cfb <- transform(cfb, INCOME_log = log(INCOME + 1)) [log0은 무한대이기에 1을 더해준다.]
+
+#13 정규분포 - 2)제곱근 변환 sqrt()
+
+cfb <- transform(cfb, INCOME_sqrt = sqrt(INCOME + 1))
+*왼쪽으로 쏠려 있는 모습
+** 데이터의 분포에 따라서 로그/제곱근 변환을 사용한다.
+
+*** 정규성 검정 -> Q-Q plot
+
+#14 범주화 - 1) 이산형화 - 히스토그램을 통한 구간 범주화
+
+disc_1 <- within( disc_1, {
+MPG.highway_cd = character(0)
+MPG.highway_cd[ MPG.highway >=20 & MPG.highway <25 ] = "20~25" 
+MPG.highway_cd[ MPG.highway >=25 & MPG.highway <30 ] = "25~30"
+MPG.highway_cd[ MPG.highway >=30 & MPG.highway <35 ] = "30~35"
+MPG.highway_cd[ MPG.highway >=35 & MPG.highway <40 ] = "35~40"
+MPG.highway_cd[ MPG.highway >=40 & MPG.highway <45 ] = "40~45"
+MPG.highway_cd[ MPG.highway >=45 & MPG.highway <=50 ] = "45~50" 
+MPG.highway_cd = factor(MPG.highway_cd,
+level = c("20~25", "25~30", "30~35", "35~40", "40~45", "45~50"))  })
+
+#14 범주화 - 1) 이산형화 - quantile을 통한 구간 범주화
+
+disc_1 <- within( disc_1, {
+   MPG.highway_cd2 = character(0)
+   MPG.highway_cd2[ MPG.highway <  quantile(MPG.highway, 0.25) ] = "1Q"
+   MPG.highway_cd2[ MPG.highway >= quantile(MPG.highway, 0.25) 
+                    & MPG.highway < quantile(MPG.highway, 0.50) ] = "2Q"
+   MPG.highway_cd2[ MPG.highway >=quantile(MPG.highway, 0.50) 
+                    & MPG.highway < quantile(MPG.highway, 0.75) ] = "3Q"
+   MPG.highway_cd2[ MPG.highway >= quantile(MPG.highway, 0.75) ] = "4Q"
+   MPG.highway_cd2 = factor(MPG.highway_cd2, 
+                           level = c("1Q", "2Q", "3Q", "4Q"))
+ })
+
+#14 범주화 - 2) 이산변수화 - ifelse() 사용
+
+cust_profile <- transform(cust_profile, 
+                           age_20 = ifelse(age >= 20 & age < 30, 1, 0), 
+                           age_30 = ifelse(age >= 30 & age < 40, 1, 0), 
+                           age_40 = ifelse(age >= 40 & age < 50, 1, 0), 
+                           age_50 = ifelse(age > 50 & age < 60, 1, 0))
+
+*시계열의 가변수 설정의 경우
+기준 변수를 설정한다.
+겨울 000 봄100 여름010 가을001
+
+
+
+
+* summarise
+summarise_each(Cars93, funs(mean, median, sd), Price, MPG.highway)
+* select
+select(Cars93_1, Manufacturer, Max.Price, MPG.highway)
+
+1)select(dataframe, starts_with("xx_name"))
+2)select(dataframe, ends_with("xx_name"))
+3)select(dataframe, contains("xx_name"))
+4)select(dataframe, matches("xx_name"))
+
+
+# one-hot-encoding
+d<-model.matrix(~train$MSZoning, data=train)[,-1]
+train<-cbind(train,d)
+train[c("MSZoning", "train$MSZoningRH","train$MSZoningRL","train$MSZoningRM")]
+
+#dcast
+
+pay_data<-read.csv('pay_data.csv',header = T)
+head(pay_data)
+
+x<-dcast(pay_data,user_id ~ product_type, value.var = "price",sum,margins = T,na.rm=T) 
+
+
+15. index를 이용한 찾기
+df[ which(df$한화생명신용상환금액>80000000), "한화생명신용상환금액"]
+
+
+
+# 결측값 처리 :https://m.blog.naver.com/tjdudwo93/221142961499
+16. 수치형 변수 결측값 처리 방법
+1. MCAR : Missing Completely At Random : 결측여부(missing or not missing)가 무작위
+2. MAR : Missing At Random : 결측 변수값과 결측여부가 무관. 단, 관측된 타 변수들과 결측여부가 관련있음
+3. MNAR : Missing Not At Random : 결측 변수값이 결측여부와 관련
+
+- 중위수/평균값
+- knn 기법
+- rpart 기법
+- rf 기법
+- 다중 처리
+
+17. 범주형 변수 결측값 처리 방법
+https://statkclee.github.io/data-science/ds-missing.html
+
+- 최빈값
+- rpart
+- rf
+
+## 결측치와 이상치
+http://pubdata.tistory.com/52
+http://leoslife.com/archives/3959
+https://www.kss.or.kr/data/file/schedule/04-2-64.pdf
+https://www.analyticsvidhya.com/blog/2016/03/tutorial-powerful-packages-imputing-missing-values/
+http://robotcat.tistory.com/469
+
+
+
+18. 변수 축소
+Chap.4 차원 축소(변수의 수 줄이기)
+
+- 자료의 차원(dimension)은 변수의 개수(#)로 정해진다. 데이터마이닝 알고리즘을 효율적으로 수행하기 위해서
+는 변수의 수를 축소해야만 한다. 4장에서 차원 축소의 몇 가지 접근법을 소개한다.
+➀ domain knowledge ➁ 자료 요약 ➂ 자료변환기술 ➃ 주성분분석(PCA) ➄ 회귀모형·회귀분류모형
+4.1 서론
+- 상관관계가 높은 변수들이나 관련없는 변수들을 포함시킬 경우에는 과적합(overfitting) 현상이 생길 수 있고,
+모형의 정확도와 신뢰도가 떨어진다. 과다하게 많은 변수는 처리하는 비용을 증가시킨다. 따라서 데이터마이닝
+의 주요 단계들 중 하나는 정확도의 손실 없이 독립변수의 차원을 축소하는 방법을 찾는 것이다.
+4.2 실질적인 고려사항
+- 변수들이 문제에 적합한지를 확인하기 위해서는 해당 분야의 전문적인 지식(domain knowledge)이 중요
+4.3 데이터 요약
+- 데이터 시각화; 데이터의 요약과 그래프를 통하여 데이터의 특징에 친해지는 것이 마이닝 과정으로부터 더 나은
+결과를 유도한다. 데이터에 대한 수치적 요약과 그래프는 데이터 축약에 매우 유익하다. 이러한 데이터 축약 결
+과는 범주형 변수의 범주를 합치거나 변수들 중 제외할 변수를 선택할 때 도움이 된다.
+- 데이터 요약 통계량; Mean, Median, min, Max, Countblank
+- 상관계수 분석; 상관계수 행렬(correl) -> 열지도(heat-map)
+- Pivot Tables; 여러 개의 변수들로부터 구한 정보를 결합하거나 요약 통계량을 계산할 수 있는 대화식 테이블이
+다. 범주형 변수들에 대해서는 범주의 결합에 의해 레코드들을 세분화할 수 있다.
+4.4 상관 분석(correlation analysis)
+- 상관 행렬(correlation matrix)로 불필요한 중첩된 변수를 찾는다. 매우 강한 상관이 있는 쌍 중 하나는 제거할
+수 있는 좋은 후보가 된다.(다중공선성의 문제를 피하는 데 유용) 또한 변수들이 이중으로 기록된 경우를 발견하
+는데 유용한 방법이다.
+- 다중공선성(multicollinearity); 둘 혹은 그 이상의 예측변수들이 결과변수와 같은 선형관계를 갖는 것을 말한다.
+4.5 범주형 변수의 범주 개수 축소
+- A single categorical variable with m categories is typically transformed into m-1 dummy variables
+- 범주형 변수에서 범주의 수가 많고 이 변수가 예측변수일 경우에, 예측변수는 다수의 가변수로 바뀌게 된다.
+- 범주의 수가 많은 범주형 예측변수는 한 개의 범주형 변수였다 할지라도 실제 데이터 마이닝 기법에서 이용될 때
+에는 데이터 차원을 크게 늘릴 수 있다. 이러한 경우 유사한 범주들을 하나로 합침으로써 범주의 수를 줄여서 해
+결한다. 피봇 테이블은 이러한 작업에서 유용하다.
+4.6 범주형 변수에서 수치형 변수로의 변환(자료변환기술)
+- 때때로 범주형 변수의 범주들은 구간을 나타낸다. 범주형 변수를 실제 값(대푯값)으로 고려하면, 여러 개의 가변
+수가 필요 없는 수치형 변수가 된다.
+4.7 주성분 분석(Principal Component Analysis, PCA); 입력 변수들을 분석함으로써 예측변수의 수 축소
+- 상관 관계(correlation)가 높은 측청치들이 존재할 때 매우 유용하다. 원래 변수들은 가중선형결합(weighted
+linear combination)으로 소수의 변수들을 새롭게 생성한다. 새롭게 생성된 변수는 무의미하다는 단점이 있다.
+- Cor=Cov/√(Var·Var)
+- 새로운 변수는 원래 자료 집합 전체가 가지고 있는 특성을 요약한다.
+- 양적 변수에 대해 사용되는 사용되는 분석기법이며, 범주형 변수는 대응분석과 같은 다른 기법들이 더 적합
+- 1차 주성분(first principal component); 직선과 점들 간의 수직선 거리 제곱합을 최소화하는 선, 데이터의 차
+원을 2개에서 1개로 축소하려고 할 때 데이터의 변동성이 가장 큰 부분을 보여주는 선
+- 1차 주성분은 데이터가 가지고 있는 대부분의 변동을 나타내고 있기 때문에 두 변수를 대표하는 하나의 변수로
+서 사용하는 것이 그럴듯하다.
+- Zi = Σ(ai,p(Xp-mean(Xp)), 주성분들은 서로 상관되어 있지 않다.(Cor=0, 다중공선성 문제는 없다)
+- 정규화; 같은 스케일로 만들기 위해 분산이 1인 표준화된 변수로 변환시키는 것이다. 변동의 관점에서 동등한 중
+요성을 부여한다.
+4.8 회귀 모형을 사용한 차원 축소
+- 예측 변수의 수를 축소하는 다른 접근법은 예측이나 분류작업을 직접 고려하여 회귀모형을 적합시키는 것이다.
+- 예측 - 선형회귀모형(MLR), 분류 - 로지스틱 회귀모형(두 경우 모두 변수선택절차를 사용할 수 있다.)
+4.9 분류와 회귀나무를 이용한 차원 축소
+- 예측 변수의 개수를 축소, 범주형 변수의 범주를 결합하는 또 다른 방법; 분류와 회귀나무
+- 회귀나무에 나타나지 않은 예측 변수들은 제거할 수 있고, 나타나지 않은 범주들은 결합될 수 있다.
+· Filter & Wrapper;
+- Filter(Variable combination, unsupervised, correlation based); 고르고 끝
+- Wrapper(Variable Selection, supervised); 변수 집합을 임의로 골라서 조건이 만족할 때까지 해본다.
+- Genetic algorithm wrapper; 유전시키는 방식으로 무엇이 좋은 형질인지 판단
+
+
+
+19. 중요 변수 선택
+#1
+caret::varImp(
+  object  # 회귀 또는 분류 모델
+)
+반환 값은 변수 중요도를 저장한 객체다.
+
+> library(mlbench)
+> library(rpart)
+> library(caret)
+> data(BreastCancer)
+> m <- rpart(Class ~., data=BreastCancer)
+> varImp(m)
+
+
+#2
+> m <- randomForest(Species ~., data=iris, importance=TRUE)
+> importance(m)
+
+#3
+http://goodtogreate.tistory.com/entry/Feature-Selection-with-Caret-Auto
+
+#4
+http://otzslayer.github.io/machine-learning/feature-selection/
+
+#5
+https://bt22dr.wordpress.com/2014/07/25/fselector-%ED%8C%A8%ED%82%A4%EC%A7%80/
+
+#6
+https://rdrr.io/cran/xgboost/man/xgb.importance.html
+
+
+
+
+
+
+
